@@ -1,85 +1,141 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import PropTypes from 'prop-types'
+import { toast } from 'react-toastify'
+import { saveTodo } from '../utils/api'
 
-const TaskForm = ({ onAddTask }) => {
-  const [taskData, setTaskData] = useState({
+const TaskForm = ({ existingTodo, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
     title: '',
-    description: '',
     priority: 'Low',
+    isCompleted: false,
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (existingTodo) {
+      setFormData({
+        title: existingTodo.title,
+        priority: existingTodo.priority,
+        isCompleted: existingTodo.isCompleted,
+      })
+    }
+  }, [existingTodo])
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setTaskData({ ...taskData, [name]: value })
+    const { name, value, type, checked } = e.target
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : value,
+    })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    onAddTask(taskData)
-    setTaskData({ title: '', description: '', priority: 'Low' })
+
+    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error('You must be logged in to add or update tasks.')
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      const savedTask = await saveTodo(formData, token, existingTodo)
+
+      toast.success(
+        existingTodo ? 'Task updated successfully!' : 'Task added successfully!'
+      )
+
+      onSave(savedTask)
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="card w-full max-w-md bg-base-100 shadow-lg p-6 rounded-lg space-y-6"
-    >
-      <h3 className="text-xl font-bold text-center text-primary">
-        Add a New Task
-      </h3>
+    <div className="card p-6 bg-base-100 shadow-lg">
+      <h2 className="text-lg font-bold mb-4">
+        {existingTodo ? 'Edit Task' : 'Add New Task'}
+      </h2>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Title</span>
+          </label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            className="input input-bordered"
+            placeholder="Enter task title"
+            required
+          />
+        </div>
 
-      {/* Input Title */}
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text text-base">Task Title</span>
-        </label>
-        <input
-          type="text"
-          name="title"
-          value={taskData.title}
-          onChange={handleChange}
-          placeholder="Enter your task title"
-          className="input input-bordered"
-          required
-        />
-      </div>
+        <div className="form-control">
+          <label className="label">
+            <span className="label-text">Priority</span>
+          </label>
+          <select
+            name="priority"
+            value={formData.priority}
+            onChange={handleChange}
+            className="select select-bordered"
+          >
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+          </select>
+        </div>
 
-      {/* Textarea Description */}
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text text-base">Task Description</span>
-        </label>
-        <textarea
-          name="description"
-          value={taskData.description}
-          onChange={handleChange}
-          placeholder="Enter a detailed description of your task"
-          className="textarea textarea-bordered"
-        />
-      </div>
+        {existingTodo && (
+          <div className="form-control flex items-center">
+            <label className="cursor-pointer label">
+              <span className="label-text">Mark as Completed</span>
+              <input
+                type="checkbox"
+                name="isCompleted"
+                checked={formData.isCompleted}
+                onChange={handleChange}
+                className="checkbox"
+              />
+            </label>
+          </div>
+        )}
 
-      {/* Select Priority */}
-      <div className="form-control">
-        <label className="label">
-          <span className="label-text text-base">Task Priority</span>
-        </label>
-        <select
-          name="priority"
-          value={taskData.priority}
-          onChange={handleChange}
-          className="select select-bordered"
-        >
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-        </select>
-      </div>
-
-      {/* Submit Button */}
-      <button type="submit" className="btn btn-primary btn-block">
-        Add Task
-      </button>
-    </form>
+        <div className="flex gap-4">
+          <button
+            type="submit"
+            className={`btn btn-primary flex-1 ${
+              isSubmitting ? 'loading' : ''
+            }`}
+            disabled={isSubmitting}
+          >
+            {existingTodo ? 'Update Task' : 'Add Task'}
+          </button>
+          {onCancel && (
+            <button
+              type="button"
+              className="btn btn-secondary flex-1"
+              onClick={onCancel}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      </form>
+    </div>
   )
+}
+
+TaskForm.propTypes = {
+  existingTodo: PropTypes.object,
+  onSave: PropTypes.func.isRequired,
+  onCancel: PropTypes.func,
 }
 
 export default TaskForm

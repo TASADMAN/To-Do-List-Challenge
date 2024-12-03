@@ -2,45 +2,62 @@ import { connectToDB } from "../utils/connect.js";
 import { createError } from "../utils/error.js";
 import Todo from "../models/todoModel.js";
 
-export async function getAllTodos(req,res,next){
+export async function getAllTodos(req, res, next) {
     await connectToDB();
-    const todos = await Todo.find({ userID: req.user.id});
-    res.status(200).send(todos);
+    try {
+        const todos = await Todo.find({ userID: req.user.id });
+        res.status(200).send(todos);
+    } catch (error) {
+        next(createError(500, "Failed to fetch todos."));
+    }
 }
 
-export async function getTodo(req,res,next){
+
+export async function getTodo(req, res, next) {
     try {
         await connectToDB();
         const todo = await Todo.findById(req.params.id);
-        if(!todo) return next(createError(404, "Todo not found!"))
-        if(todo.userID.toString() !== req.user.id) return next(createError(404, "Not athorized!"))
+        if (!todo) return next(createError(404, "Todo not found!"))
+        if (todo.userID.toString() !== req.user.id) return next(createError(404, "Not athorized!"))
         res.status(200).send(todo);
 
     } catch (error) {
         next(createError(404, "Todo not found!"))
     }
-       
+
 }
 
-export async function updateTodo(req,res,next){
+export async function updateTodo(req, res, next) {
     const id = req.params.id;
-    if(!req.body) return next(createError(404, "Missing fields!"))
-    try {
-        await connectToDB()
-        const todo = await Todo.findById(id);
-        if(todo.userID.toString() !== req.user.id) return next(createError(404, "Not athorized!"))
-        todo.title = req.body.title || todo.title;
-        if(req.body.isCompleted !== undefined){
-            todo.isCompleted = req.body.isCompleted;
-        }
-        await todo.save();
-        res.status(200).json({message:"Todo updated!"})
-    } catch (error) {
-        return next(createError(404, "Todo not found!"))
-    }
-} 
+    const { title, isCompleted, priority } = req.body;
 
-export async function deleteTodo(req,res,next){
+    if (!title && isCompleted === undefined && !priority) {
+        return next(createError(400, "Missing fields!"));
+    }
+
+    try {
+        await connectToDB();
+        const todo = await Todo.findById(id);
+
+        if (!todo) return next(createError(404, "Todo not found!"));
+        if (todo.userID.toString() !== req.user.id)
+            return next(createError(403, "Not authorized!"));
+
+        todo.title = title || todo.title;
+        if (isCompleted !== undefined) {
+            todo.isCompleted = isCompleted;
+        }
+        todo.priority = priority || todo.priority;
+
+        await todo.save();
+        res.status(200).json({ message: "Todo updated!", todo });
+    } catch (error) {
+        next(createError(500, "Failed to update todo."));
+    }
+}
+
+
+export async function deleteTodo(req, res, next) {
     try {
         await connectToDB()
         const todo = await Todo.deleteOne({
@@ -48,19 +65,32 @@ export async function deleteTodo(req,res,next){
             userID: req.user.id,
         });
         if (!todo.deletedCount) return next(createError(404, "Title is required"))
-        res.status(200).json({ message: "Todo deleted!"});
+        res.status(200).json({ message: "Todo deleted!" });
     } catch (error) {
         return next(createError(404, "Todo not found!"))
     }
 }
 
-export async function addTodo(req,res,next){
-    console.log(req.body);
-    if(!req.body || !req.body.title){
-        return next(createError(404, "Title is required"))
+export async function addTodo(req, res, next) {
+    console.log("Incoming Data:", req.body); // Debug: ตรวจสอบข้อมูลที่ส่งมา
+    const { title, priority } = req.body;
+
+    if (!title) {
+        return next(createError(400, "Title is required"));
     }
-    await connectToDB();
-    const newTodo = new Todo({ title: req.body.title, userID: req.user.id});
-    await newTodo.save();
-    res.status(201).json(newTodo);
+
+    try {
+        const newTodo = new Todo({
+            title,
+            priority: priority || "Low", // ตั้งค่าค่าเริ่มต้นหากไม่ได้ส่งมา
+            userID: req.user.id, // ตรวจสอบว่า req.user.id มีค่า
+        });
+        await newTodo.save();
+        res.status(201).json(newTodo);
+    } catch (error) {
+        console.error("Error in addTodo:", error.message); // Debug: Log Error
+        next(createError(500, "Failed to create the Todo"));
+    }
 }
+
+

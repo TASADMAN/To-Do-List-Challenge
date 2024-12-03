@@ -28,7 +28,7 @@ export async function login(formData) {
         const email = formData.get('email');
         const password = formData.get('password');
 
-        // ส่งคำร้องไปยัง API เพื่อเข้าสู่ระบบ
+        // ส่งคำร้องไปยัง API
         const res = await fetch('http://localhost:3000/api/user/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -37,13 +37,23 @@ export async function login(formData) {
 
         const data = await res.json();
 
+        // หากคำร้องไม่สำเร็จ, โยนข้อผิดพลาด
         if (!res.ok) {
             throw new Error(data.error || 'Failed to log in');
         }
 
-        return { success: data, error: null }; // ส่งค่าที่ได้จากการเข้าสู่ระบบ
+        // เก็บ Token ใน LocalStorage
+        localStorage.setItem('token', data.token);
+
+        // ส่งข้อมูลผู้ใช้และ Token กลับไป
+        return { success: data, error: null };
     } catch (error) {
-        return { success: null, error: error.message }; // ส่งข้อผิดพลาดที่เกิดขึ้น
+        // จัดการข้อผิดพลาด
+        return { success: null, error: error.message };
     }
 }
+
+
+
+
 

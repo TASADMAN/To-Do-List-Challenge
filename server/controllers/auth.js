@@ -4,7 +4,7 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// Register User
+// ปรับปรุงฟังก์ชัน register
 export async function register(req, res, next) {
     try {
         const { email, password, username } = req.body;
@@ -13,27 +13,33 @@ export async function register(req, res, next) {
             return next(createError(400, "Missing required fields: email, password, username"));
         }
 
-        // Connect to DB
+        // ตรวจสอบรูปแบบอีเมล
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return next(createError(400, "Invalid email format"));
+        }
+
+        // เชื่อมต่อฐานข้อมูล
         await connectToDB();
 
-        // Check if the user already exists
+        // ตรวจสอบว่าผู้ใช้มีอยู่แล้วหรือไม่
         const alreadyRegistered = await User.exists({ email });
         if (alreadyRegistered) {
             return next(createError(400, "User already exists."));
         }
 
-        // Hash the password
-        const salt = bcrypt.genSaltSync(10);
-        const hashedPassword = bcrypt.hashSync(password, salt);
+        // แฮชรหัสผ่าน
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create new user
+        // สร้างผู้ใช้ใหม่
         const newUser = new User({
             email,
             password: hashedPassword,
             username,
         });
 
-        // Save to DB
+        // บันทึกในฐานข้อมูล
         const savedUser = await newUser.save();
 
         res.status(201).json({
@@ -45,48 +51,47 @@ export async function register(req, res, next) {
     }
 }
 
-// Login User
-export async function login(req, res, next) {
+
+// ปรับปรุงฟังก์ชัน login
+export const login = async (req, res, next) => {
     try {
         const { email, password } = req.body;
 
         if (!email || !password) {
-            return next(createError(400, "Missing required fields: email and password"));
+            return res.status(400).json({ error: "Missing required fields: email and password" });
         }
 
-        // Connect to DB
+        // เชื่อมต่อฐานข้อมูล
         await connectToDB();
 
-        // Find user by email
+        // ค้นหา User
         const user = await User.findOne({ email });
         if (!user) {
-            return next(createError(400, "Invalid credentials"));
+            return res.status(400).json({ error: "Invalid credentials" });
         }
 
-        // Verify password
+        // ตรวจสอบรหัสผ่าน
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
-            return next(createError(400, "Invalid credentials"));
+            return res.status(400).json({ error: "Invalid credentials" });
         }
 
-        // Generate JWT token
+        // สร้าง Token
         const token = jwt.sign({ id: user._id }, process.env.JWT, { expiresIn: "1h" });
 
-        // Set cookie and respond
-        res
-            .cookie("access_token", token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-            })
-            .status(200)
-            .json({
-                message: "User logged in successfully",
-                user: { id: user._id, email: user.email, username: user.username },
-            });
+        res.status(200).json({
+            message: "Login successful",
+            token,
+            user: { id: user._id, email: user.email, username: user.username },
+        });
     } catch (error) {
-        next(createError(500, "Something went wrong while logging in"));
+        console.error("Login Error:", error);
+        res.status(500).json({ error: "Something went wrong while logging in" });
     }
-}
+};
+
+
+
 
 // Logout User
 export async function logout(req, res, next) {
