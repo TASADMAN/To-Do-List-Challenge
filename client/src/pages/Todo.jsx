@@ -3,104 +3,105 @@ import TaskForm from '../components/TaksForm'
 import TaskItem from '../components/TaksItem'
 import Header from '../components/Header'
 import ToggleThemes from '../components/ToggleThemes'
-import { toast } from 'react-toastify'
 import { fetchTodos, addTodo, updateTodo, deleteTodo } from '../utils/api'
+import { toast } from 'react-toastify'
 
 const Todo = () => {
   const [tasks, setTasks] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [editingTask, setEditingTask] = useState(null)
+  const token = localStorage.getItem('token')
 
+  // โหลดรายการงานเมื่อ Component เริ่มต้น
   useEffect(() => {
     const loadTasks = async () => {
-      const token = localStorage.getItem('token')
-      if (!token) {
-        toast.error('You must be logged in to view tasks.')
-        setIsLoading(false)
-        return
-      }
-
       try {
-        const fetchedTasks = await fetchTodos(token)
-        setTasks(fetchedTasks)
+        const data = await fetchTodos(token)
+        setTasks(data)
       } catch (error) {
-        toast.error(error.message)
-      } finally {
-        setIsLoading(false)
+        console.error(error.message)
       }
     }
-
     loadTasks()
-  }, [])
+  }, [token])
 
-  const handleAddTask = async (taskData) => {
-    const token = localStorage.getItem('token')
+  const handleSaveTask = async (taskData) => {
     if (!token) {
-      toast.error('You must be logged in to add tasks.')
+      toast.error('Please login to manage tasks.')
       return
     }
 
     try {
-      const newTask = await addTodo(taskData, token)
-      setTasks([...tasks, newTask])
-      toast.success('Task added successfully!')
+      if (editingTask) {
+        // แก้ไขงาน
+        const updatedTask = await updateTodo(editingTask._id, taskData, token)
+        setTasks((prevTasks) =>
+          prevTasks.map((task) =>
+            task._id === updatedTask._id ? updatedTask : task
+          )
+        )
+        setEditingTask(null)
+        toast.success('Task updated successfully!')
+      } else {
+        // เพิ่มงานใหม่
+        const newTask = await addTodo(taskData, token)
+        setTasks((prevTasks) => [...prevTasks, newTask])
+        toast.success('Task added successfully!')
+      }
     } catch (error) {
-      toast.error(error.message)
+      console.error(error.message)
+      toast.error('Failed to save task.')
     }
   }
 
-  const handleToggleComplete = async (id) => {
-    const token = localStorage.getItem('token')
-    const task = tasks.find((t) => t._id === id)
-
-    try {
-      const updatedTask = await updateTodo(
-        id,
-        { isCompleted: !task.isCompleted },
-        token
-      )
-      setTasks(tasks.map((t) => (t._id === id ? updatedTask : t)))
-      toast.success('Task updated successfully!')
-    } catch (error) {
-      toast.error(error.message)
-    }
+  const handleEditTask = (task) => {
+    setEditingTask(task) // ตั้งค่า Task ที่จะแก้ไข
   }
 
   const handleDeleteTask = async (id) => {
-    const token = localStorage.getItem('token')
+    if (!token) {
+      toast.error('Please login to add a To-Do.') // แจ้งเตือนผู้ใช้
+      window.location.href = '/' // เปลี่ยนเส้นทางไปหน้า Login
+      return
+    }
 
     try {
       await deleteTodo(id, token)
-      setTasks(tasks.filter((t) => t._id !== id))
+      setTasks((prevTasks) => prevTasks.filter((task) => task._id !== id))
       toast.success('Task deleted successfully!')
     } catch (error) {
-      toast.error(error.message)
+      console.error(error.message)
+      toast.error('Failed to delete task.')
     }
   }
 
+  const handleLogout = () => {
+    localStorage.removeItem('user') // ลบข้อมูล user จาก localStorage
+    localStorage.removeItem('token')
+    setTasks([])
+    window.location.href = '/login'
+  }
+
   return (
-    <section className="h-screen p-8 mx-auto max-w-6xl">
-      <Header />
+    <section className="todo-app h-screen p-8 mx-auto max-w-6xl">
+      <Header handleLogout={handleLogout} />
       <ToggleThemes />
+
       <h2 className="text-3xl font-bold text-center mb-8">My To-Do List</h2>
 
       <div className="max-w-md mx-auto mb-8">
-        <TaskForm onAddTask={handleAddTask} />
+        <TaskForm onSaveTask={handleSaveTask} editingTask={editingTask} />
       </div>
 
-      {isLoading ? (
-        <p className="text-center">Loading tasks...</p>
-      ) : (
-        <ul className="flex flex-col gap-y-4">
-          {tasks.map((task) => (
-            <TaskItem
-              key={task._id}
-              task={task}
-              onToggleComplete={handleToggleComplete}
-              onDelete={handleDeleteTask}
-            />
-          ))}
-        </ul>
-      )}
+      <ul className="task-list flex flex-col gap-y-4">
+        {tasks.map((task) => (
+          <TaskItem
+            key={task._id}
+            task={task}
+            onEdit={handleEditTask}
+            onDelete={handleDeleteTask}
+          />
+        ))}
+      </ul>
     </section>
   )
 }

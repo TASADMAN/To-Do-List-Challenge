@@ -1,22 +1,16 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 
-const Header = () => {
+const Header = ({ handleLogout }) => {
   const [user, setUser] = useState(null)
 
   // ดึงข้อมูล user จาก localStorage
   useEffect(() => {
     const storedUser = JSON.parse(localStorage.getItem('user'))
     if (storedUser) {
-      setUser(storedUser)
+      setUser(storedUser) // ตั้งค่า user ใน state
     }
   }, [])
-
-  const handleLogout = () => {
-    setUser(null)
-    localStorage.removeItem('user') // ลบข้อมูล user จาก localStorage
-    console.log('User logged out')
-  }
 
   return (
     <header className="bg-base-200 shadow-md py-4 rounded-2xl mb-4">
@@ -25,16 +19,19 @@ const Header = () => {
           To-Do App
         </Link>
 
+        {/* ตรวจสอบว่ามีผู้ใช้หรือไม่ */}
         {user ? (
-          <div className="flex items-center gap-4 p-3 rounded-lg ">
+          <div className="flex items-center gap-4 p-3 rounded-lg">
+            {/* แสดงชื่อผู้ใช้ */}
             <p className="text-sm font-medium text-base-500">
               👋 Hello,{' '}
               <span className="font-semibold text-primary">
                 {user.username || 'User'}
               </span>
             </p>
+            {/* ปุ่ม Logout */}
             <button
-              className="btn btn-sm btn-primary  shadow-md"
+              className="btn btn-sm btn-primary shadow-md"
               onClick={handleLogout}
             >
               Logout
@@ -42,6 +39,7 @@ const Header = () => {
           </div>
         ) : (
           <div className="flex gap-4">
+            {/* แสดงปุ่ม Login และ Register */}
             <Link to="/login" className="btn btn-sm btn-outline btn-secondary">
               Sign in
             </Link>

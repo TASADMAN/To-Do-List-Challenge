@@ -28,33 +28,26 @@ export async function getTodo(req, res, next) {
 }
 
 export async function updateTodo(req, res, next) {
-    const id = req.params.id;
     const { title, isCompleted, priority } = req.body;
-
-    if (!title && isCompleted === undefined && !priority) {
-        return next(createError(400, "Missing fields!"));
-    }
+    const id = req.params.id;
 
     try {
-        await connectToDB();
-        const todo = await Todo.findById(id);
+        const updatedTodo = await Todo.findByIdAndUpdate(
+            id,
+            { title, isCompleted, priority },
+            { new: true } // ส่งข้อมูลที่อัปเดตแล้วกลับมา
+        );
 
-        if (!todo) return next(createError(404, "Todo not found!"));
-        if (todo.userID.toString() !== req.user.id)
-            return next(createError(403, "Not authorized!"));
-
-        todo.title = title || todo.title;
-        if (isCompleted !== undefined) {
-            todo.isCompleted = isCompleted;
+        if (!updatedTodo) {
+            return res.status(404).json({ error: "Todo not found" });
         }
-        todo.priority = priority || todo.priority;
 
-        await todo.save();
-        res.status(200).json({ message: "Todo updated!", todo });
+        res.status(200).json(updatedTodo); // ส่ง Task ที่อัปเดตกลับไป
     } catch (error) {
-        next(createError(500, "Failed to update todo."));
+        next(error);
     }
 }
+
 
 
 export async function deleteTodo(req, res, next) {
