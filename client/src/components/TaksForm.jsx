@@ -34,7 +34,7 @@ const TaskForm = ({ onSaveTask, editingTask }) => {
         value={taskData.title}
         onChange={handleChange}
         placeholder="Task Title"
-        className="input input-bordered w-full"
+        className="input input-bordered w-full h-20"
         required
       />
 

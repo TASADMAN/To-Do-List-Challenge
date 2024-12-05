@@ -18,7 +18,9 @@ const Header = ({ handleLogout }) => {
         <Link to="/" className="text-2xl font-bold text-primary">
           To-Do App
         </Link>
-
+        <Link to="/history" className="btn btn-secondary mx-2">
+          History
+        </Link>
         {/* ตรวจสอบว่ามีผู้ใช้หรือไม่ */}
         {user ? (
           <div className="flex items-center gap-4 p-3 rounded-lg">

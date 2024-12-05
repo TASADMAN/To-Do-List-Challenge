@@ -6,22 +6,18 @@ const ToggleThemes = () => {
 
   // สลับธีม
   const handleTheme = () => {
-    const newTheme = theme === 'winter' ? 'dracula' : 'winter'
+    const newTheme = theme === 'retro' ? 'dracula' : 'retro'
     setTheme(newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
+    localStorage.setItem('theme', newTheme) // บันทึกธีมลงใน localStorage ทันที
   }
 
   // โหลดธีมที่เคยบันทึกไว้ (ถ้ามี)
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'winter'
+    const savedTheme = localStorage.getItem('theme') || 'retro'
     setTheme(savedTheme)
     document.documentElement.setAttribute('data-theme', savedTheme)
   }, [])
-
-  // บันทึกธีมลงใน localStorage
-  useEffect(() => {
-    localStorage.setItem('theme', theme)
-  }, [theme])
 
   return (
     <nav className="flex justify-end items-center">

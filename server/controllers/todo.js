@@ -1,16 +1,21 @@
 import { connectToDB } from "../utils/connect.js";
 import { createError } from "../utils/error.js";
 import Todo from "../models/todoModel.js";
+import User from "../models/userModel.js"; // นำเข้าที่นี่
+
 
 export async function getAllTodos(req, res, next) {
     await connectToDB();
     try {
-        const todos = await Todo.find({ userID: req.user.id });
+        const todos = await Todo.find({ userID: req.user.id, isCompleted: false }); // เพิ่ม isCompleted: false
         res.status(200).send(todos);
     } catch (error) {
         next(createError(500, "Failed to fetch todos."));
     }
 }
+
+
+
 
 
 export async function getTodo(req, res, next) {
@@ -86,4 +91,70 @@ export async function addTodo(req, res, next) {
     }
 }
 
+export async function rewardUserForTask(req, res, next) {
+    const { id } = req.params;
+
+    try {
+        const task = await Todo.findById(id);
+
+        if (!task) {
+            return res.status(404).json({ error: "Task not found" });
+        }
+
+        if (task.userID.toString() !== req.user.id) {
+            return res.status(403).json({ error: "Not authorized to complete this task." });
+        }
+
+        if (task.isCompleted) {
+            return res.status(400).json({ error: "Task already completed." });
+        }
+
+        // คำนวณ Coin จาก Priority
+        let coins = 0;
+        switch (task.priority) {
+            case "Low":
+                coins = 3;
+                break;
+            case "Medium":
+                coins = 5;
+                break;
+            case "High":
+                coins = 10;
+                break;
+        }
+
+        // อัปเดต Task
+        task.isCompleted = true;
+        task.completedAt = new Date();
+        task.coins = coins; // บันทึก Coins ลง Task
+        await task.save();
+
+        // คำนวณคะแนนรวม
+        const completedTasks = await Todo.find({ userID: req.user.id, isCompleted: true });
+        const totalCoins = completedTasks.reduce((acc, task) => acc + task.coins, 0);
+
+        res.status(200).json({
+            message: "Task completed successfully!",
+            coins,
+            totalCoins, // ส่งคะแนนรวมกลับไป
+        });
+    } catch (error) {
+        next(createError(500, "Failed to complete the task."));
+    }
+}
+
+
+
+export async function getHistory(req, res, next) {
+    try {
+        const completedTasks = await Todo.find({
+            userID: req.user.id,
+            isCompleted: true
+        }).select("title priority completedAt coins").sort({ completedAt: -1 });
+
+        res.status(200).json(completedTasks);
+    } catch (error) {
+        next(createError(500, "Failed to fetch completed history"));
+    }
+}
 

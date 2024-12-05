@@ -12,6 +12,6 @@ export default {
   },
   plugins: [typography, daisyui],
   daisyui: {
-    themes: ['winter', 'dracula'],
+    themes: ['retro', 'dracula'],
   },
 };

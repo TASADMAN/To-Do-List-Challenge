@@ -1,39 +1,64 @@
 import React from 'react'
+import { FaEdit, FaTrashAlt, FaCheck } from 'react-icons/fa'
 
-const TaskItem = ({ task, onEdit, onDelete }) => {
+const TaskItem = ({ task, onEdit, onDelete, onComplete }) => {
   return (
-    <li
-      className={`p-4 rounded-lg shadow-md ${
-        task.completed ? 'bg-green-100' : 'bg-base-100'
+    <div
+      className={`card shadow-md ${
+        task.isCompleted
+          ? 'bg-green-100 text-green-900' // สีเขียวอ่อนเมื่อ Task เสร็จ
+          : 'bg-base-100 text-base-content' // สีขาวและข้อความดำสำหรับธีมสีขาว
       }`}
     >
-      <h3 className="text-xl font-bold">
-        {task.title}{' '}
-        <span
-          className={`badge ${
-            task.priority === 'High'
-              ? 'badge-error'
-              : task.priority === 'Medium'
-              ? 'badge-warning'
-              : 'badge-success'
-          }`}
-        >
-          {task.priority}
-        </span>
-      </h3>
-      <p className="mt-2 text-gray-700">{task.description}</p>
-      <div className="flex gap-4 mt-4">
-        <button onClick={() => onEdit(task)} className="btn btn-sm btn-warning">
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(task._id)}
-          className="btn btn-sm btn-error"
-        >
-          Delete
-        </button>
+      <div className="card-body">
+        {/* Title Section */}
+        <h2 className="card-title">
+          {task.title}
+          <span
+            className={`badge ${
+              task.priority === 'High'
+                ? 'badge-error'
+                : task.priority === 'Medium'
+                ? 'badge-warning'
+                : 'badge-success'
+            }`}
+          >
+            {task.priority}
+          </span>
+        </h2>
+
+        {/* Completed Status */}
+        {task.isCompleted ? (
+          <p className="text-sm text-success">🎉 Task Completed!</p>
+        ) : (
+          <p className="text-sm text-warning">⏳ Pending Task</p>
+        )}
+
+        {/* Actions */}
+        <div className="card-actions justify-end">
+          {!task.isCompleted && (
+            <button
+              onClick={() => onComplete(task._id)}
+              className="btn btn-sm btn-primary flex items-center gap-1"
+            >
+              <FaCheck /> Complete
+            </button>
+          )}
+          <button
+            onClick={() => onEdit(task)}
+            className="btn btn-sm btn-info flex items-center gap-1 text-white"
+          >
+            <FaEdit />
+          </button>
+          <button
+            onClick={() => onDelete(task._id)}
+            className="btn btn-sm btn-error flex items-center gap-1 text-white"
+          >
+            <FaTrashAlt />
+          </button>
+        </div>
       </div>
-    </li>
+    </div>
   )
 }
 

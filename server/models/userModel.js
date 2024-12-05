@@ -14,6 +14,19 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: [true, "Musst provide username."],
     },
+    totalCoins: {
+        type: Number,
+        default: 0,
+    },
+    history: [
+        {
+            title: String,
+            priority: String,
+            completedAt: { type: Date, default: Date.now },
+            coins: Number,
+        },
+    ],
+
 });
 
 const User = mongoose.model("User", userSchema);

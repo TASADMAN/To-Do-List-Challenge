@@ -133,3 +133,31 @@ export const fetchTodo = async (todoId) => {
         throw error;
     }
 };
+
+
+export const fetchHistory = async (token) => {
+    if (!token) {
+        throw new Error('Token is required to fetch history');
+    }
+
+    const res = await fetch('http://localhost:3000/api/todos/history', {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+        },
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to fetch history');
+    }
+
+    const data = await res.json();
+    if (!Array.isArray(data)) {
+        console.error('Expected an array but got:', data);
+        return [];
+    }
+    return data;
+};
+

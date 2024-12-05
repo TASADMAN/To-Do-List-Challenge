@@ -22,6 +22,13 @@ const todoSchema = new mongoose.Schema(
             enum: ["Low", "Medium", "High"],
             default: "Low",
         },
+        completedAt: {
+            type: Date, // เก็บเวลาที่ Task ถูกทำสำเร็จ
+        },
+        coins: {
+            type: Number, // จำนวน Coins ที่ได้จาก Task
+            default: 0,
+        },
     },
     {
         timestamps: true, // สร้างฟิลด์ createdAt, updatedAt อัตโนมัติ

@@ -5,13 +5,14 @@ import Header from '../components/Header'
 import ToggleThemes from '../components/ToggleThemes'
 import { fetchTodos, addTodo, updateTodo, deleteTodo } from '../utils/api'
 import { toast } from 'react-toastify'
+import { useNavigate } from 'react-router-dom'
 
 const Todo = () => {
   const [tasks, setTasks] = useState([])
   const [editingTask, setEditingTask] = useState(null)
   const token = localStorage.getItem('token')
+  const navigate = useNavigate()
 
-  // โหลดรายการงานเมื่อ Component เริ่มต้น
   useEffect(() => {
     const loadTasks = async () => {
       try {
@@ -32,7 +33,6 @@ const Todo = () => {
 
     try {
       if (editingTask) {
-        // แก้ไขงาน
         const updatedTask = await updateTodo(editingTask._id, taskData, token)
         setTasks((prevTasks) =>
           prevTasks.map((task) =>
@@ -42,7 +42,6 @@ const Todo = () => {
         setEditingTask(null)
         toast.success('Task updated successfully!')
       } else {
-        // เพิ่มงานใหม่
         const newTask = await addTodo(taskData, token)
         setTasks((prevTasks) => [...prevTasks, newTask])
         toast.success('Task added successfully!')
@@ -54,13 +53,13 @@ const Todo = () => {
   }
 
   const handleEditTask = (task) => {
-    setEditingTask(task) // ตั้งค่า Task ที่จะแก้ไข
+    setEditingTask(task)
   }
 
   const handleDeleteTask = async (id) => {
     if (!token) {
-      toast.error('Please login to add a To-Do.') // แจ้งเตือนผู้ใช้
-      window.location.href = '/' // เปลี่ยนเส้นทางไปหน้า Login
+      toast.error('Please login to add a To-Do.')
+      window.location.href = '/'
       return
     }
 
@@ -74,8 +73,42 @@ const Todo = () => {
     }
   }
 
+  const handleCompleteTask = async (id) => {
+    if (!token) {
+      toast.error('Please login to complete tasks.')
+      return
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/todos/${id}/complete`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      )
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.message || 'Failed to complete task.')
+      }
+
+      const data = await res.json()
+      setTasks((prevTasks) => prevTasks.filter((task) => task._id !== id))
+      toast.success(`Task completed! You earned ${data.coins} coins.`)
+
+      navigate('/history')
+    } catch (error) {
+      console.error(error.message)
+      toast.error('Failed to complete task.')
+    }
+  }
+
   const handleLogout = () => {
-    localStorage.removeItem('user') // ลบข้อมูล user จาก localStorage
+    localStorage.removeItem('user')
     localStorage.removeItem('token')
     setTasks([])
     window.location.href = '/login'
@@ -92,16 +125,18 @@ const Todo = () => {
         <TaskForm onSaveTask={handleSaveTask} editingTask={editingTask} />
       </div>
 
-      <ul className="task-list flex flex-col gap-y-4">
+      {/* Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tasks.map((task) => (
           <TaskItem
             key={task._id}
             task={task}
             onEdit={handleEditTask}
             onDelete={handleDeleteTask}
+            onComplete={handleCompleteTask}
           />
         ))}
-      </ul>
+      </div>
     </section>
   )
 }
