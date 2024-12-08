@@ -84,7 +84,7 @@ export const updateTodo = async (id, updates, token) => {
         throw new Error(errorData.error || "Failed to update task");
     }
 
-    return res.json(); // ตรวจสอบว่าข้อมูลที่ส่งคืนคือ Task ที่อัปเดตแล้ว
+    return res.json();
 };
 
 export const deleteTodo = async (id, token) => {
@@ -113,7 +113,7 @@ export const fetchTodo = async (todoId) => {
     }
 
     try {
-        const token = localStorage.getItem("token"); // ดึง Token จาก Local Storage
+        const token = localStorage.getItem("token");
         const res = await fetch(`http://localhost:3000/api/todos/${todoId}`, {
             method: "GET",
             headers: {

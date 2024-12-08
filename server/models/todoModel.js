@@ -5,13 +5,13 @@ const todoSchema = new mongoose.Schema(
         userID: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: [true, "Todo must have an owner"],
+            required: [true,],
         },
         title: {
             type: String,
-            required: [true, "Must provide title."],
-            maxlength: [100, "Title must be less than 100 characters."],
-            trim: true, // ตัดช่องว่างก่อนและหลัง
+            required: [true,],
+            maxlength: [100,],
+            trim: true,
         },
         isCompleted: {
             type: Boolean,
@@ -23,24 +23,24 @@ const todoSchema = new mongoose.Schema(
             default: "Low",
         },
         completedAt: {
-            type: Date, // เก็บเวลาที่ Task ถูกทำสำเร็จ
+            type: Date,
         },
         coins: {
-            type: Number, // จำนวน Coins ที่ได้จาก Task
+            type: Number,
             default: 0,
         },
     },
     {
-        timestamps: true, // สร้างฟิลด์ createdAt, updatedAt อัตโนมัติ
+        timestamps: true,
     }
 );
 
-// เพิ่ม Index
+
 todoSchema.index({ userID: 1 });
 todoSchema.index({ priority: 1 });
 todoSchema.index({ isCompleted: 1 });
 
-// Middleware: ตรวจสอบ Title ก่อนบันทึก
+//  Middleware จะตรวจสอบ Title ก่อนบันทึก
 todoSchema.pre("save", function (next) {
     if (!this.title.trim()) {
         throw new Error("Title cannot be empty or just spaces.");
@@ -48,7 +48,6 @@ todoSchema.pre("save", function (next) {
     next();
 });
 
-// สร้าง Model
 const Todo = mongoose.model("Todo", todoSchema);
 
 export default Todo;

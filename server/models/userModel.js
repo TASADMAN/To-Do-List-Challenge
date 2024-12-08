@@ -3,16 +3,16 @@ import mongoose from "mongoose";
 const userSchema = new mongoose.Schema({
     email: {
         type: String,
-        required: [true, "Must provide an email."],
-        unique: [true, "Email must be unique."],
+        required: [true,],
+        unique: [true,],
     },
     password: {
         type: String,
-        required: [true, "Musst provide password."],
+        required: [true,],
     },
     username: {
         type: String,
-        required: [true, "Musst provide username."],
+        required: [true,],
     },
     totalCoins: {
         type: Number,

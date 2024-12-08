@@ -7,8 +7,8 @@ import ToggleThemes from '../components/ToggleThemes'
 const History = () => {
   const [history, setHistory] = useState([])
   const [totalCoins, setTotalCoins] = useState(0)
-  const [currentPage, setCurrentPage] = useState(1) // หน้าปัจจุบัน
-  const [itemsPerPage] = useState(5) // จำนวนรายการต่อหน้า
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage] = useState(5)
   const token = localStorage.getItem('token')
   const navigate = useNavigate()
 
@@ -18,30 +18,28 @@ const History = () => {
         const data = await fetchHistory(token)
         setHistory(data)
 
-        // คำนวณคะแนนรวม
         const total = data.reduce((acc, item) => acc + (item.coins || 0), 0)
-        setTotalCoins(total > 100 ? total % 100 : total) // รีเซ็ตคะแนนเมื่อเกิน 100
+        setTotalCoins(total > 100 ? total % 100 : total)
       } catch (error) {
         console.error('Failed to fetch history:', error.message)
       }
     }
     loadHistory()
   }, [token])
-
-  // คำนวณเปอร์เซ็นต์สำหรับแถบคะแนน (สูงสุด 100)
+  //คำนวณเปอร์เซ็นต์ ที่ทำรายการ
   const progress = Math.min((totalCoins / 100) * 100, 100)
 
-  // คำนวณรายการที่จะแสดงในหน้าปัจจุบัน
-  const indexOfLastItem = currentPage * itemsPerPage
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage
-  const currentItems = history.slice(indexOfFirstItem, indexOfLastItem)
+  // จัดการ pagination
+  const LastItem = currentPage * itemsPerPage
+  const FirstItem = LastItem - itemsPerPage
+  const currentItems = history.slice(FirstItem, LastItem)
 
-  const totalPages = Math.ceil(history.length / itemsPerPage) // จำนวนหน้าทั้งหมด
+  const totalPages = Math.ceil(history.length / itemsPerPage)
 
   const handleLogout = () => {
     localStorage.removeItem('user')
     localStorage.removeItem('token')
-    navigate('/login') // ใช้ navigate แทน
+    navigate('/login')
   }
 
   return (
@@ -53,7 +51,6 @@ const History = () => {
         Total Coins: <strong>{totalCoins}</strong>/100
       </p>
 
-      {/* แถบ Progress แบบ DaisyUI */}
       <div className="mb-6">
         <progress
           className="progress progress-success w-full"
@@ -64,7 +61,7 @@ const History = () => {
         <p className="text-center mt-2">
           {progress.toFixed(0)}% of 100 Coins 🏆
         </p>
-        {/* ข้อความแสดงความยินดีเมื่อถึง 100 Coins */}
+
         {progress === 100 && (
           <p className="text-green-500 font-bold text-center mt-4">
             🎉 Congratulations! You've reached 100 coins! 🎉
@@ -72,7 +69,6 @@ const History = () => {
         )}
       </div>
 
-      {/* ตารางแสดงประวัติ */}
       {currentItems.length > 0 ? (
         <div>
           <table className="table w-full mb-4">
@@ -105,7 +101,6 @@ const History = () => {
             </tbody>
           </table>
 
-          {/* Pagination */}
           <div className="join  flex justify-center items-center pb-20">
             {Array.from({ length: totalPages }, (_, index) => (
               <input

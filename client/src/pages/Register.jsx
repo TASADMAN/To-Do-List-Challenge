@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify' // Import toast
+import { toast } from 'react-toastify'
 import { register } from '../actions/userActions'
 
 const Register = () => {
@@ -29,16 +29,15 @@ const Register = () => {
     if (result.success) {
       localStorage.setItem('user', JSON.stringify(result.success.user))
       toast.success('Registration successful')
-      // Toast success
     } else if (result.error) {
-      toast.error(result.error) // Toast error
+      toast.error(result.error)
     }
   }
 
   useEffect(() => {
     if (state.success) {
       setTimeout(() => {
-        navigate('/login') // Navigate to login page
+        navigate('/login')
       }, 2000)
     }
   }, [state.success])

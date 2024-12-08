@@ -7,11 +7,7 @@ import History from './pages/History'
 const App = () => {
   return (
     <>
-      {/* ToastContainer อยู่ด้านนอกของ Routes */}
-      <ToastContainer
-        position="top-right"
-        autoClose={2000} // ปิด Toast อัตโนมัติใน 5 วินาที
-      />
+      <ToastContainer position="top-right" autoClose={2000} />
 
       <Routes>
         <Route path="/" element={<Todo />} />

@@ -2,19 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { BsMoonFill, BsSunFill } from 'react-icons/bs'
 
 const ToggleThemes = () => {
-  const [theme, setTheme] = useState('dracula') // ค่าเริ่มต้นของธีม
+  const [theme, setTheme] = useState('dracula')
 
-  // สลับธีม
   const handleTheme = () => {
     const newTheme = theme === 'retro' ? 'dracula' : 'retro'
     setTheme(newTheme)
     document.documentElement.setAttribute('data-theme', newTheme)
-    localStorage.setItem('theme', newTheme) // บันทึกธีมลงใน localStorage ทันที
+    localStorage.setItem('theme', newTheme)
   }
 
-  // โหลดธีมที่เคยบันทึกไว้ (ถ้ามี)
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'retro'
+    const savedTheme = localStorage.getItem('theme') || 'dracula'
     setTheme(savedTheme)
     document.documentElement.setAttribute('data-theme', savedTheme)
   }, [])

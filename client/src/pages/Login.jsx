@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify' // Import toast
+import { toast } from 'react-toastify'
 import { login } from '../actions/userActions'
 
 const Login = () => {
@@ -27,16 +27,16 @@ const Login = () => {
 
     if (result.success) {
       localStorage.setItem('user', JSON.stringify(result.success.user))
-      toast.success('Login successful') // Toast success
+      toast.success('Login successful')
     } else if (result.error) {
-      toast.error(result.error) // Toast error
+      toast.error(result.error)
     }
   }
 
   useEffect(() => {
     if (state.success) {
       setTimeout(() => {
-        navigate('/') // Navigate to Todo page
+        navigate('/')
       }, 1000)
     }
   }, [state.success])

@@ -6,12 +6,11 @@ const TaskItem = ({ task, onEdit, onDelete, onComplete }) => {
     <div
       className={`card shadow-md ${
         task.isCompleted
-          ? 'bg-green-100 text-green-900' // สีเขียวอ่อนเมื่อ Task เสร็จ
-          : 'bg-base-100 text-base-content' // สีขาวและข้อความดำสำหรับธีมสีขาว
+          ? 'bg-green-100 text-green-900'
+          : 'bg-base-100 text-base-content'
       }`}
     >
       <div className="card-body">
-        {/* Title Section */}
         <h2 className="card-title">
           {task.title}
           <span

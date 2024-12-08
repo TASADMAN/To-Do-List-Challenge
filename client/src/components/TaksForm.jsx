@@ -23,7 +23,7 @@ const TaskForm = ({ onSaveTask, editingTask }) => {
   const handleSubmit = (e) => {
     e.preventDefault()
     onSaveTask(taskData)
-    setTaskData({ title: '', description: '', priority: 'Low' }) // รีเซ็ตฟอร์ม
+    setTaskData({ title: '', description: '', priority: 'Low' })
   }
 
   return (

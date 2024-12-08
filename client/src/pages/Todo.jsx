@@ -117,7 +117,9 @@ const Todo = () => {
   return (
     <section className="todo-app h-screen p-8 mx-auto max-w-6xl">
       <Header handleLogout={handleLogout} />
-      <ToggleThemes />
+      <div className="container mx-auto flex justify-between items-center px-4">
+        <ToggleThemes />
+      </div>
 
       <h2 className="text-3xl font-bold text-center mb-8">My To-Do List</h2>
 
@@ -125,7 +127,6 @@ const Todo = () => {
         <TaskForm onSaveTask={handleSaveTask} editingTask={editingTask} />
       </div>
 
-      {/* Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {tasks.map((task) => (
           <TaskItem
